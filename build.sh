@@ -28,6 +28,10 @@ while [[ $# -gt 0 ]]; do
             REGISTRY="$2"
             shift 2
             ;;
+        --dockerhub)
+            REGISTRY="docker.io"
+            shift
+            ;;
         -h|--help)
             echo "Usage: $0 [OPTIONS]"
             echo "Options:"
@@ -35,7 +39,13 @@ while [[ $# -gt 0 ]]; do
             echo "  -t, --tag TAG         Docker image tag (default: latest)"
             echo "  -p, --push            Push image to registry after build"
             echo "  -r, --registry REG    Registry to push to (e.g., ghcr.io/user)"
+            echo "  --dockerhub           Set registry to docker.io (Docker Hub)"
             echo "  -h, --help            Show this help message"
+            echo ""
+            echo "Examples:"
+            echo "  $0                              # Build locally"
+            echo "  $0 -p --dockerhub -n username/rtl433-hass-bridge"
+            echo "  $0 -p -r ghcr.io/user -n rtl433-hass-bridge"
             exit 0
             ;;
         *)
@@ -73,12 +83,14 @@ echo "Image: $FULL_IMAGE_NAME"
 if [ "$PUSH_TO_REGISTRY" = true ]; then
     if [ -z "$REGISTRY" ]; then
         echo "Error: Registry not specified for push operation"
+        echo "Use --dockerhub for Docker Hub or -r <registry> for custom registry"
         exit 1
     fi
     
-    echo "Pushing image to registry..."
+    echo "Pushing image to registry: $REGISTRY"
     docker push "$FULL_IMAGE_NAME"
     echo "Push completed successfully!"
+    echo "Image available at: $FULL_IMAGE_NAME"
 fi
 
 echo "Done!"

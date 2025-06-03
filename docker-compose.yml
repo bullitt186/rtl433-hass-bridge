@@ -1,6 +1,6 @@
 services:
   rtl433-bridge:
-    image: rtl433-hass-bridge:latest
+    image: bullitt168/rtl433-hass-bridge:latest
     container_name: rtl433-hass-bridge
     hostname: rtl433-bridge
     
