@@ -1,0 +1,128 @@
+version: '3.8'
+
+services:
+  rtl433-bridge:
+    image: rtl433-hass-bridge:latest
+    container_name: rtl433-hass-bridge
+    hostname: rtl433-bridge
+    
+    # Restart policy for robustness
+    restart: unless-stopped
+    
+    # Environment configuration
+    environment:
+      # MQTT Configuration (Required)
+      - MQTT_HOST=${MQTT_HOST:-mosquitto}
+      - MQTT_PORT=${MQTT_PORT:-1883}
+      - MQTT_USERNAME=${MQTT_USERNAME}
+      - MQTT_PASSWORD=${MQTT_PASSWORD}
+      
+      # TLS Configuration (Optional)
+      # - MQTT_CA_CERT=/certs/ca.crt
+      # - MQTT_CERT=/certs/client.crt
+      # - MQTT_KEY=/certs/client.key
+      
+      # RTL_433 Configuration
+      - RTL_TOPIC=${RTL_TOPIC:-rtl_433/+/events}
+      - DEVICE_TOPIC_SUFFIX=${DEVICE_TOPIC_SUFFIX:-devices[/type][/model][/subtype][/channel][/id]}
+      
+      # Home Assistant Configuration
+      - DISCOVERY_PREFIX=${DISCOVERY_PREFIX:-homeassistant}
+      - DISCOVERY_INTERVAL=${DISCOVERY_INTERVAL:-600}
+      - EXPIRE_AFTER=${EXPIRE_AFTER}
+      - FORCE_UPDATE=${FORCE_UPDATE:-false}
+      - RETAIN=${RETAIN:-true}
+      
+      # Filtering (Optional)
+      # - DEVICE_IDS=123 456 789
+      
+      # Logging
+      - DEBUG=${DEBUG:-false}
+      - QUIET=${QUIET:-false}
+      
+      # System
+      - TZ=${TZ:-UTC}
+    
+    # Optional volumes for certificates and logs
+    volumes:
+      - rtl433_logs:/app/logs
+      # - ./certs:/certs:ro
+      # - ./config:/app/config:ro
+    
+    # Network configuration
+    networks:
+      - homeassistant
+    
+    # Security
+    user: "1000:1000"
+    read_only: true
+    tmpfs:
+      - /tmp
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.5'
+        reservations:
+          memory: 64M
+          cpus: '0.1'
+    
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "rtl_433_mqtt_hass.py"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    
+    # Dependencies
+    depends_on:
+      mosquitto:
+        condition: service_healthy
+
+  # Example MQTT broker (remove if you have your own)
+  mosquitto:
+    image: eclipse-mosquitto:2.0
+    container_name: mosquitto
+    hostname: mosquitto
+    restart: unless-stopped
+    
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    
+    volumes:
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_logs:/mosquitto/log
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+    
+    networks:
+      - homeassistant
+    
+    healthcheck:
+      test: ["CMD", "mosquitto_pub", "-h", "localhost", "-t", "test", "-m", "test"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  rtl433_logs:
+    driver: local
+  mosquitto_data:
+    driver: local
+  mosquitto_logs:
+    driver: local
+
+networks:
+  homeassistant:
+    driver: bridge
+    name: homeassistant
