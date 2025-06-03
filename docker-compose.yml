@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   rtl433-bridge:
     image: rtl433-hass-bridge:latest
@@ -12,7 +10,7 @@ services:
     # Environment configuration
     environment:
       # MQTT Configuration (Required)
-      - MQTT_HOST=${MQTT_HOST:-mosquitto}
+      - MQTT_HOST=${MQTT_HOST}
       - MQTT_PORT=${MQTT_PORT:-1883}
       - MQTT_USERNAME=${MQTT_USERNAME}
       - MQTT_PASSWORD=${MQTT_PASSWORD}
@@ -29,7 +27,7 @@ services:
       # Home Assistant Configuration
       - DISCOVERY_PREFIX=${DISCOVERY_PREFIX:-homeassistant}
       - DISCOVERY_INTERVAL=${DISCOVERY_INTERVAL:-600}
-      - EXPIRE_AFTER=${EXPIRE_AFTER}
+      - EXPIRE_AFTER=${EXPIRE_AFTER:-}
       - FORCE_UPDATE=${FORCE_UPDATE:-false}
       - RETAIN=${RETAIN:-true}
       
@@ -49,9 +47,6 @@ services:
       # - ./certs:/certs:ro
       # - ./config:/app/config:ro
     
-    # Network configuration
-    networks:
-      - homeassistant
     
     # Security
     user: "1000:1000"
@@ -84,45 +79,8 @@ services:
       retries: 3
       start_period: 30s
     
-    # Dependencies
-    depends_on:
-      mosquitto:
-        condition: service_healthy
-
-  # Example MQTT broker (remove if you have your own)
-  mosquitto:
-    image: eclipse-mosquitto:2.0
-    container_name: mosquitto
-    hostname: mosquitto
-    restart: unless-stopped
-    
-    ports:
-      - "1883:1883"
-      - "9001:9001"
-    
-    volumes:
-      - mosquitto_data:/mosquitto/data
-      - mosquitto_logs:/mosquitto/log
-      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
-    
-    networks:
-      - homeassistant
-    
-    healthcheck:
-      test: ["CMD", "mosquitto_pub", "-h", "localhost", "-t", "test", "-m", "test"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
 volumes:
   rtl433_logs:
     driver: local
-  mosquitto_data:
-    driver: local
-  mosquitto_logs:
-    driver: local
 
-networks:
-  homeassistant:
-    driver: bridge
-    name: homeassistant

@@ -42,61 +42,59 @@ RUN for i in 1 2 3; do \
     && chmod +x /app/rtl_433_mqtt_hass.py
 
 # Create startup script that converts environment variables to command line arguments
-RUN sh -c "cat > /app/start.sh << 'EOF'"
-#!/bin/sh
-set -e
-
-# Logging function
-log() {
-    echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1"
-}
-
-log "Starting RTL_433 MQTT Home Assistant Bridge..."
-
-# Validate required environment variables
-if [ -z "$MQTT_HOST" ]; then
-    log "ERROR: MQTT_HOST environment variable is required"
-    exit 1
-fi
-
-# Build command line arguments from environment variables
-ARGS=""
-
-# Boolean flags
-[ "$DEBUG" = "true" ] && ARGS="$ARGS --debug"
-[ "$QUIET" = "true" ] && ARGS="$ARGS --quiet"
-[ "$RETAIN" = "true" ] && ARGS="$ARGS --retain"
-[ "$FORCE_UPDATE" = "true" ] && ARGS="$ARGS --force_update"
-
-# String arguments with validation
-[ -n "$MQTT_USERNAME" ] && ARGS="$ARGS --user '$MQTT_USERNAME'"
-[ -n "$MQTT_PASSWORD" ] && ARGS="$ARGS --password '$MQTT_PASSWORD'"
-[ -n "$MQTT_HOST" ] && ARGS="$ARGS --host '$MQTT_HOST'"
-[ -n "$MQTT_PORT" ] && ARGS="$ARGS --port $MQTT_PORT"
-[ -n "$MQTT_CA_CERT" ] && ARGS="$ARGS --ca_cert '$MQTT_CA_CERT'"
-[ -n "$MQTT_CERT" ] && ARGS="$ARGS --cert '$MQTT_CERT'"
-[ -n "$MQTT_KEY" ] && ARGS="$ARGS --key '$MQTT_KEY'"
-[ -n "$RTL_TOPIC" ] && ARGS="$ARGS --rtl-topic '$RTL_TOPIC'"
-[ -n "$DISCOVERY_PREFIX" ] && ARGS="$ARGS --discovery-prefix '$DISCOVERY_PREFIX'"
-[ -n "$DEVICE_TOPIC_SUFFIX" ] && ARGS="$ARGS --device-topic_suffix '$DEVICE_TOPIC_SUFFIX'"
-[ -n "$DISCOVERY_INTERVAL" ] && ARGS="$ARGS --interval $DISCOVERY_INTERVAL"
-[ -n "$EXPIRE_AFTER" ] && ARGS="$ARGS --expire-after $EXPIRE_AFTER"
-[ -n "$DEVICE_IDS" ] && ARGS="$ARGS --ids $DEVICE_IDS"
-
-log "Configuration:"
-log "  MQTT Host: $MQTT_HOST:$MQTT_PORT"
-log "  RTL Topic: $RTL_TOPIC"
-log "  Discovery Prefix: $DISCOVERY_PREFIX"
-log "  Discovery Interval: ${DISCOVERY_INTERVAL}s"
-[ -n "$DEVICE_IDS" ] && log "  Device IDs Filter: $DEVICE_IDS"
-log "Starting with args: $ARGS"
-
-# Handle shutdown gracefully
-trap 'log "Shutting down..."; exit 0' TERM INT
-
-# Execute the Python script with built arguments
-eval "exec python /app/rtl_433_mqtt_hass.py $ARGS"
-EOF
+RUN echo '#!/bin/sh' > /app/start.sh && \
+    echo 'set -e' >> /app/start.sh && \
+    echo '' >> /app/start.sh && \
+    echo '# Logging function' >> /app/start.sh && \
+    echo 'log() {' >> /app/start.sh && \
+    echo '    echo "[$(date +"%Y-%m-%d %H:%M:%S")] $1"' >> /app/start.sh && \
+    echo '}' >> /app/start.sh && \
+    echo '' >> /app/start.sh && \
+    echo 'log "Starting RTL_433 MQTT Home Assistant Bridge..."' >> /app/start.sh && \
+    echo '' >> /app/start.sh && \
+    echo '# Validate required environment variables' >> /app/start.sh && \
+    echo 'if [ -z "$MQTT_HOST" ]; then' >> /app/start.sh && \
+    echo '    log "ERROR: MQTT_HOST environment variable is required"' >> /app/start.sh && \
+    echo '    exit 1' >> /app/start.sh && \
+    echo 'fi' >> /app/start.sh && \
+    echo '' >> /app/start.sh && \
+    echo '# Build command line arguments from environment variables' >> /app/start.sh && \
+    echo 'ARGS=""' >> /app/start.sh && \
+    echo '' >> /app/start.sh && \
+    echo '# Boolean flags' >> /app/start.sh && \
+    echo '[ "$DEBUG" = "true" ] && ARGS="$ARGS --debug"' >> /app/start.sh && \
+    echo '[ "$QUIET" = "true" ] && ARGS="$ARGS --quiet"' >> /app/start.sh && \
+    echo '[ "$RETAIN" = "true" ] && ARGS="$ARGS --retain"' >> /app/start.sh && \
+    echo '[ "$FORCE_UPDATE" = "true" ] && ARGS="$ARGS --force_update"' >> /app/start.sh && \
+    echo '' >> /app/start.sh && \
+    echo '# String arguments with validation' >> /app/start.sh && \
+    echo '[ -n "$MQTT_USERNAME" ] && ARGS="$ARGS --user $MQTT_USERNAME"' >> /app/start.sh && \
+    echo '[ -n "$MQTT_PASSWORD" ] && ARGS="$ARGS --password $MQTT_PASSWORD"' >> /app/start.sh && \
+    echo '[ -n "$MQTT_HOST" ] && ARGS="$ARGS --host $MQTT_HOST"' >> /app/start.sh && \
+    echo '[ -n "$MQTT_PORT" ] && ARGS="$ARGS --port $MQTT_PORT"' >> /app/start.sh && \
+    echo '[ -n "$MQTT_CA_CERT" ] && ARGS="$ARGS --ca_cert $MQTT_CA_CERT"' >> /app/start.sh && \
+    echo '[ -n "$MQTT_CERT" ] && ARGS="$ARGS --cert $MQTT_CERT"' >> /app/start.sh && \
+    echo '[ -n "$MQTT_KEY" ] && ARGS="$ARGS --key $MQTT_KEY"' >> /app/start.sh && \
+    echo '[ -n "$RTL_TOPIC" ] && ARGS="$ARGS --rtl-topic $RTL_TOPIC"' >> /app/start.sh && \
+    echo '[ -n "$DISCOVERY_PREFIX" ] && ARGS="$ARGS --discovery-prefix $DISCOVERY_PREFIX"' >> /app/start.sh && \
+    echo '[ -n "$DEVICE_TOPIC_SUFFIX" ] && ARGS="$ARGS --device-topic_suffix $DEVICE_TOPIC_SUFFIX"' >> /app/start.sh && \
+    echo '[ -n "$DISCOVERY_INTERVAL" ] && ARGS="$ARGS --interval $DISCOVERY_INTERVAL"' >> /app/start.sh && \
+    echo '[ -n "$EXPIRE_AFTER" ] && ARGS="$ARGS --expire-after $EXPIRE_AFTER"' >> /app/start.sh && \
+    echo '[ -n "$DEVICE_IDS" ] && ARGS="$ARGS --ids $DEVICE_IDS"' >> /app/start.sh && \
+    echo '' >> /app/start.sh && \
+    echo 'log "Configuration:"' >> /app/start.sh && \
+    echo 'log "  MQTT Host: $MQTT_HOST:$MQTT_PORT"' >> /app/start.sh && \
+    echo 'log "  RTL Topic: $RTL_TOPIC"' >> /app/start.sh && \
+    echo 'log "  Discovery Prefix: $DISCOVERY_PREFIX"' >> /app/start.sh && \
+    echo 'log "  Discovery Interval: ${DISCOVERY_INTERVAL}s"' >> /app/start.sh && \
+    echo '[ -n "$DEVICE_IDS" ] && log "  Device IDs Filter: $DEVICE_IDS"' >> /app/start.sh && \
+    echo 'log "Starting with args: $ARGS"' >> /app/start.sh && \
+    echo '' >> /app/start.sh && \
+    echo '# Handle shutdown gracefully' >> /app/start.sh && \
+    echo 'trap '"'"'log "Shutting down..."; exit 0'"'"' TERM INT' >> /app/start.sh && \
+    echo '' >> /app/start.sh && \
+    echo '# Execute the Python script with built arguments' >> /app/start.sh && \
+    echo 'eval "exec python /app/rtl_433_mqtt_hass.py $ARGS"' >> /app/start.sh
 
 # Make the startup script executable
 RUN chmod +x /app/start.sh
